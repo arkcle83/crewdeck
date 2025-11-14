@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CrewDeck - iRacing Session Manager</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.4.3/echarts.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vanta@0.5.24/dist/vanta.waves.min.js"></script>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body class="bg-slate-950 text-white font-sans">
+    <!-- Vanta.js Background -->
+    <div id="vanta-background" class="fixed inset-0 -z-10"></div>
+
+    <!-- Main Container -->
+    <div class="min-h-screen flex flex-col">
+        <!-- Header/Navigation -->
+        <header class="border-b border-slate-800 bg-slate-900/80 backdrop-blur-md sticky top-0 z-40">
+            <div class="max-w-7xl mx-auto px-4 py-4">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 bg-gradient-to-br from-cyan-500 to-blue-500 rounded-lg flex items-center justify-center">
+                            <span class="font-bold text-lg">⚡</span>
+                        </div>
+                        <h1 class="text-2xl font-bold bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">
+                            CrewDeck
+                        </h1>
+                    </div>
+                    <nav class="flex gap-6 items-center">
+                        <button class="nav-btn active" data-view="dashboard">Dashboard</button>
+                        <button class="nav-btn" data-view="drivers">Pilotes</button>
+                        <button class="nav-btn" data-view="sessions">Sessions</button>
+                        <button class="nav-btn" data-view="analytics">Analytics</button>
+                        <button id="settings-btn" class="p-2 hover:bg-slate-800 rounded-lg transition">⚙️</button>
+                    </nav>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="flex-1 max-w-7xl w-full mx-auto px-4 py-8">
+            <!-- Dashboard View -->
+            <div id="dashboard" class="view-container active">
+                <div class="mb-8">
+                    <h2 class="text-3xl font-bold mb-2">Dashboard</h2>
+                    <p class="text-slate-400">Suivi des performances en temps réel</p>
+                </div>
+
+                <!-- Quick Stats -->
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+                    <div class="card-stat">
+                        <div class="text-sm text-slate-400 mb-2">Pilotes Actifs</div>
+                        <div class="text-3xl font-bold" id="stat-drivers">0</div>
+                    </div>
+                    <div class="card-stat">
+                        <div class="text-sm text-slate-400 mb-2">Sessions</div>
+                        <div class="text-3xl font-bold" id="stat-sessions">0</div>
+                    </div>
+                    <div class="card-stat">
+                        <div class="text-sm text-slate-400 mb-2">Meilleur Temps</div>
+                        <div class="text-3xl font-bold text-cyan-400" id="stat-best-time">--:--</div>
+                    </div>
+                    <div class="card-stat">
+                        <div class="text-sm text-slate-400 mb-2">Temps Moyen</div>
+                        <div class="text-3xl font-bold text-blue-400" id="stat-avg-time">--:--</div>
+                    </div>
+                </div>
+
+                <!-- Main Charts Grid -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                    <!-- Leaderboard -->
+                    <div class="card">
+                        <h3 class="text-xl font-bold mb-4 flex items-center gap-2">
+                            <span class="text-yellow-400">🏁</span> Classement Actuel
+                        </h3>
+                        <div id="leaderboard" class="space-y-3">
+                            <div class="text-slate-400 text-sm">Aucun pilote pour le moment</div>
+                        </div>
+                    </div>
+
+                    <!-- Performance Trend -->
+                    <div class="card">
+                        <h3 class="text-xl font-bold mb-4 flex items-center gap-2">
+                            <span class="text-blue-400">📊</span> Tendance Performances
+                        </h3>
+                        <div id="trend-chart" class="h-64"></div>
+                    </div>
+                </div>
+
+                <!-- Sessions Recent -->
+                <div class="card">
+                    <h3 class="text-xl font-bold mb-4 flex items-center gap-2">
+                        <span class="text-green-400">⏱️</span> Sessions Récentes
+                    </h3>
+                    <div id="sessions-list" class="space-y-2">
+                        <div class="text-slate-400 text-sm">Aucune session enregistrée</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Drivers View -->
+            <div id="drivers" class="view-container">
+                <div class="flex items-center justify-between mb-8">
+                    <div>
+                        <h2 class="text-3xl font-bold mb-2">Gestion des Pilotes</h2>
+                        <p class="text-slate-400">Gérez votre équipe de pilotes</p>
+                    </div>
+                    <button id="add-driver-btn" class="btn-primary">+ Ajouter Pilote</button>
+                </div>
+
+                <div id="drivers-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div class="text-slate-400">Aucun pilote ajouté</div>
+                </div>
+            </div>
+
+            <!-- Sessions View -->
+            <div id="sessions" class="view-container">
+                <div class="flex items-center justify-between mb-8">
+                    <div>
+                        <h2 class="text-3xl font-bold mb-2">Sessions de Course</h2>
+                        <p class="text-slate-400">Enregistrez et analysez vos sessions</p>
+                    </div>
+                    <button id="new-session-btn" class="btn-primary">+ Nouvelle Session</button>
+                </div>
+
+                <div id="sessions-grid" class="space-y-4">
+                    <div class="text-slate-400">Aucune session créée</div>
+                </div>
+            </div>
+
+            <!-- Analytics View -->
+            <div id="analytics" class="view-container">
+                <div class="mb-8">
+                    <h2 class="text-3xl font-bold mb-2">Analytics Avancées</h2>
+                    <p class="text-slate-400">Analyses détaillées des performances</p>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="card">
+                        <h3 class="text-xl font-bold mb-4">Distribution des Temps</h3>
+                        <div id="distribution-chart" class="h-64"></div>
+                    </div>
+                    <div class="card">
+                        <h3 class="text-xl font-bold mb-4">Progression par Pilote</h3>
+                        <div id="progression-chart" class="h-64"></div>
+                    </div>
+                </div>
+
+                <div class="card mt-6">
+                    <h3 class="text-xl font-bold mb-4">Comparaison des Pilotes</h3>
+                    <div id="comparison-chart" class="h-96"></div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal: Add/Edit Driver -->
+    <div id="driver-modal" class="modal hidden">
+        <div class="modal-content">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-2xl font-bold" id="driver-modal-title">Ajouter Pilote</h2>
+                <button class="close-modal text-2xl">&times;</button>
+            </div>
+            <form id="driver-form" class="space-y-4">
+                <div>
+                    <label for="driver-name" class="form-label">Nom du Pilote</label>
+                    <input type="text" id="driver-name" placeholder="Ex: John Smith" class="form-input" required>
+                </div>
+                <div>
+                    <label for="driver-number" class="form-label">Numéro de Course</label>
+                    <input type="number" id="driver-number" placeholder="1-99" class="form-input" min="1" max="99" required>
+                </div>
+                <div>
+                    <label for="driver-team" class="form-label">Équipe</label>
+                    <input type="text" id="driver-team" placeholder="Ex: Team Alpha" class="form-input">
+                </div>
+                <div>
+                    <label for="driver-car" class="form-label">Véhicule</label>
+                    <input type="text" id="driver-car" placeholder="Ex: Porsche 911" class="form-input">
+                </div>
+                <div class="flex gap-3 pt-4">
+                    <button type="submit" class="btn-primary flex-1">Enregistrer</button>
+                    <button type="button" class="btn-secondary flex-1 close-modal">Annuler</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal: New/Edit Session -->
+    <div id="session-modal" class="modal hidden">
+        <div class="modal-content">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-2xl font-bold" id="session-modal-title">Nouvelle Session</h2>
+                <button class="close-modal text-2xl">&times;</button>
+            </div>
+            <form id="session-form" class="space-y-4">
+                <div>
+                    <label for="session-name" class="form-label">Nom de la Session</label>
+                    <input type="text" id="session-name" placeholder="Ex: Practice Session 1" class="form-input" required>
+                </div>
+                <div>
+                    <label for="session-track" class="form-label">Circuit</label>
+                    <input type="text" id="session-track" placeholder="Ex: Monza" class="form-input" required>
+                </div>
+                <div>
+                    <label for="session-date" class="form-label">Date</label>
+                    <input type="date" id="session-date" class="form-input" required>
+                </div>
+                <div>
+                    <label for="session-weather" class="form-label">Conditions Météo</label>
+                    <select id="session-weather" class="form-input">
+                        <option value="sunny">Ensoleillé</option>
+                        <option value="cloudy">Nuageux</option>
+                        <option value="rainy">Pluvieux</option>
+                        <option value="night">Nuit</option>
+                    </select>
+                </div>
+                <div class="flex gap-3 pt-4">
+                    <button type="submit" class="btn-primary flex-1">Créer Session</button>
+                    <button type="button" class="btn-secondary flex-1 close-modal">Annuler</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal: Lap Times -->
+    <div id="lap-times-modal" class="modal hidden">
+        <div class="modal-content max-h-96 overflow-y-auto">
+            <div class="flex justify-between items-center mb-4 sticky top-0 bg-slate-900 py-2">
+                <h2 class="text-2xl font-bold" id="lap-times-title">Temps de Tours</h2>
+                <button class="close-modal text-2xl">&times;</button>
+            </div>
+            <div id="lap-times-content" class="space-y-3"></div>
+            <div class="pt-4 flex gap-3">
+                <input type="text" id="new-lap-time" placeholder="MM:SS.mmm" class="form-input flex-1">
+                <button id="add-lap-btn" class="btn-primary">Ajouter Tour</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Overlay -->
+    <div id="modal-overlay" class="modal-overlay hidden"></div>
+
+    <!-- Keyboard Shortcuts Help -->
+    <div id="shortcuts-modal" class="modal hidden">
+        <div class="modal-content">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-2xl font-bold">Raccourcis Clavier</h2>
+                <button class="close-modal text-2xl">&times;</button>
+            </div>
+            <div class="space-y-2 text-sm">
+                <div class="flex justify-between"><span>Dashboard</span><kbd>D</kbd></div>
+                <div class="flex justify-between"><span>Pilotes</span><kbd>P</kbd></div>
+                <div class="flex justify-between"><span>Sessions</span><kbd>S</kbd></div>
+                <div class="flex justify-between"><span>Analytics</span><kbd>A</kbd></div>
+                <div class="flex justify-between"><span>Ajouter Pilote</span><kbd>N</kbd></div>
+                <div class="flex justify-between"><span>Nouvelle Session</span><kbd>T</kbd></div>
+                <div class="flex justify-between"><span>Export Données</span><kbd>E</kbd></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

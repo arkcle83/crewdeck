@@ -1,0 +1,67 @@
+{
+  "app": {
+    "name": "CrewDeck",
+    "version": "1.0.0",
+    "description": "iRacing Session Manager - Gestion des performances d'équipe",
+    "author": "Racing Team",
+    "license": "MIT"
+  },
+  "theme": {
+    "colors": {
+      "primary": "#06b6d4",
+      "secondary": "#3b82f6",
+      "accent": "#f59e0b",
+      "danger": "#ef4444",
+      "success": "#10b981",
+      "bg_primary": "#0f172a",
+      "bg_secondary": "#1e293b",
+      "bg_tertiary": "#334155",
+      "text_primary": "#f1f5f9",
+      "text_secondary": "#cbd5e1",
+      "text_tertiary": "#94a3b8"
+    },
+    "darkMode": true,
+    "borderRadius": "8px"
+  },
+  "features": {
+    "driverManagement": true,
+    "sessionTracking": true,
+    "lapTimeRecording": true,
+    "analytics": true,
+    "dataExport": true,
+    "keyboardShortcuts": true,
+    "localStorage": true,
+    "vantaBackground": true
+  },
+  "ui": {
+    "animationDuration": "300ms",
+    "transitionTiming": "ease",
+    "responsiveBreakpoints": {
+      "mobile": 768,
+      "tablet": 1024,
+      "desktop": 1440
+    }
+  },
+  "storage": {
+    "drivers_key": "crewdeck_drivers",
+    "sessions_key": "crewdeck_sessions"
+  },
+  "defaults": {
+    "maxDriversPerTeam": 4,
+    "maxSessionsStored": 100,
+    "timeFormat": "MM:SS.mmm",
+    "dateFormat": "YYYY-MM-DD"
+  },
+  "keyboard": {
+    "shortcuts": {
+      "dashboard": "D",
+      "drivers": "P",
+      "sessions": "S",
+      "analytics": "A",
+      "addDriver": "N",
+      "newSession": "T",
+      "export": "E",
+      "help": "?"
+    }
+  }
+}

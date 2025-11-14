@@ -1,0 +1,667 @@
+/* ==================== VARIABLES ET THÈME ==================== */
+:root {
+    --primary: #06b6d4;     /* Cyan */
+    --secondary: #3b82f6;   /* Blue */
+    --accent: #f59e0b;      /* Amber for highlights */
+    --danger: #ef4444;      /* Red */
+    --success: #10b981;     /* Green */
+
+    --bg-primary: #0f172a;  /* Darker slate */
+    --bg-secondary: #1e293b;
+    --bg-tertiary: #334155;
+    --text-primary: #f1f5f9;
+    --text-secondary: #cbd5e1;
+    --text-tertiary: #94a3b8;
+    --border-color: #334155;
+}
+
+/* ==================== RESET ET BASE ==================== */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    line-height: 1.6;
+}
+
+/* ==================== CARDS ET CONTAINERS ==================== */
+.card {
+    background: linear-gradient(135deg, rgba(30, 41, 59, 0.8), rgba(51, 65, 85, 0.5));
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 24px;
+    backdrop-filter: blur(10px);
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.card:hover {
+    border-color: var(--primary);
+    box-shadow: 0 12px 24px rgba(6, 182, 212, 0.1);
+    transform: translateY(-2px);
+}
+
+.card-stat {
+    background: linear-gradient(135deg, rgba(30, 41, 59, 0.8), rgba(51, 65, 85, 0.5));
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 20px;
+    backdrop-filter: blur(10px);
+    transition: all 0.3s ease;
+}
+
+.card-stat:hover {
+    border-color: var(--primary);
+    transform: translateY(-2px);
+}
+
+/* ==================== NAVIGATION ==================== */
+.nav-btn {
+    padding: 8px 16px;
+    border: none;
+    background: transparent;
+    color: var(--text-secondary);
+    cursor: pointer;
+    font-size: 16px;
+    transition: all 0.3s ease;
+    border-radius: 6px;
+    position: relative;
+}
+
+.nav-btn:hover {
+    color: var(--text-primary);
+    background: rgba(6, 182, 212, 0.1);
+}
+
+.nav-btn.active {
+    color: var(--primary);
+    background: rgba(6, 182, 212, 0.15);
+}
+
+.nav-btn.active::after {
+    content: '';
+    position: absolute;
+    bottom: -12px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 4px;
+    height: 4px;
+    background: var(--primary);
+    border-radius: 50%;
+}
+
+/* ==================== BOUTONS ==================== */
+.btn-primary {
+    background: linear-gradient(135deg, var(--primary), var(--secondary));
+    color: white;
+    padding: 12px 24px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(6, 182, 212, 0.3);
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(6, 182, 212, 0.4);
+}
+
+.btn-primary:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 8px rgba(6, 182, 212, 0.2);
+}
+
+.btn-secondary {
+    background: rgba(51, 65, 85, 0.8);
+    color: var(--text-primary);
+    padding: 12px 24px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.btn-secondary:hover {
+    background: rgba(51, 65, 85, 1);
+    border-color: var(--primary);
+}
+
+.btn-small {
+    padding: 8px 16px;
+    font-size: 14px;
+}
+
+.btn-danger {
+    background: var(--danger);
+    color: white;
+    padding: 8px 16px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.3s ease;
+}
+
+.btn-danger:hover {
+    background: #dc2626;
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+}
+
+/* ==================== FORMULAIRES ==================== */
+.form-label {
+    display: block;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.form-input,
+.form-input select {
+    width: 100%;
+    padding: 12px 16px;
+    background: rgba(51, 65, 85, 0.5);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    color: var(--text-primary);
+    font-size: 16px;
+    transition: all 0.3s ease;
+}
+
+.form-input::placeholder {
+    color: var(--text-tertiary);
+}
+
+.form-input:focus,
+.form-input select:focus {
+    outline: none;
+    border-color: var(--primary);
+    background: rgba(51, 65, 85, 0.7);
+    box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.1);
+}
+
+.form-input:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* ==================== MODALES ==================== */
+.modal {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 1000;
+    max-width: 500px;
+    width: 90%;
+}
+
+.modal.hidden {
+    display: none;
+}
+
+.modal-content {
+    background: linear-gradient(135deg, rgba(30, 41, 59, 0.95), rgba(51, 65, 85, 0.8));
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    padding: 32px;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    animation: modalSlideIn 0.3s ease;
+}
+
+@keyframes modalSlideIn {
+    from {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    z-index: 999;
+    backdrop-filter: blur(4px);
+}
+
+.modal-overlay.hidden {
+    display: none;
+}
+
+.close-modal {
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    font-size: 32px;
+    transition: color 0.3s ease;
+}
+
+.close-modal:hover {
+    color: var(--primary);
+}
+
+/* ==================== CLASSEMENT ==================== */
+.leaderboard-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px;
+    background: rgba(51, 65, 85, 0.4);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    transition: all 0.3s ease;
+}
+
+.leaderboard-item:hover {
+    background: rgba(51, 65, 85, 0.6);
+    border-color: var(--primary);
+}
+
+.leaderboard-rank {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: rgba(6, 182, 212, 0.2);
+    font-weight: bold;
+    margin-right: 16px;
+}
+
+.leaderboard-rank.first {
+    background: rgba(245, 158, 11, 0.3);
+    color: #fcd34d;
+}
+
+.leaderboard-rank.second {
+    background: rgba(192, 192, 192, 0.3);
+    color: #d1d5db;
+}
+
+.leaderboard-rank.third {
+    background: rgba(205, 127, 50, 0.3);
+    color: #fbbf24;
+}
+
+.leaderboard-info {
+    flex: 1;
+}
+
+.leaderboard-name {
+    font-weight: 600;
+    font-size: 16px;
+}
+
+.leaderboard-meta {
+    font-size: 12px;
+    color: var(--text-tertiary);
+}
+
+.leaderboard-time {
+    font-size: 18px;
+    font-weight: bold;
+    color: var(--primary);
+    font-family: 'Courier New', monospace;
+}
+
+/* ==================== SESSION CARDS ==================== */
+.session-card {
+    background: linear-gradient(135deg, rgba(30, 41, 59, 0.8), rgba(51, 65, 85, 0.5));
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 20px;
+    transition: all 0.3s ease;
+}
+
+.session-card:hover {
+    border-color: var(--primary);
+    box-shadow: 0 12px 24px rgba(6, 182, 212, 0.1);
+}
+
+.session-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: start;
+    margin-bottom: 16px;
+}
+
+.session-title {
+    font-size: 18px;
+    font-weight: bold;
+}
+
+.session-track {
+    color: var(--text-tertiary);
+    font-size: 14px;
+}
+
+.session-badge {
+    display: inline-block;
+    padding: 4px 12px;
+    background: rgba(6, 182, 212, 0.2);
+    border: 1px solid var(--primary);
+    border-radius: 20px;
+    font-size: 12px;
+    color: var(--primary);
+}
+
+.session-drivers {
+    margin-bottom: 16px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.session-driver-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    font-size: 14px;
+}
+
+.session-actions {
+    display: flex;
+    gap: 8px;
+}
+
+/* ==================== DRIVER CARDS ==================== */
+.driver-card {
+    background: linear-gradient(135deg, rgba(30, 41, 59, 0.8), rgba(51, 65, 85, 0.5));
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 20px;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.driver-card:hover {
+    border-color: var(--primary);
+    box-shadow: 0 12px 24px rgba(6, 182, 212, 0.1);
+}
+
+.driver-number {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 50px;
+    height: 50px;
+    background: linear-gradient(135deg, var(--primary), var(--secondary));
+    border-radius: 8px;
+    font-size: 24px;
+    font-weight: bold;
+}
+
+.driver-info {
+    margin-bottom: 16px;
+}
+
+.driver-name {
+    font-size: 20px;
+    font-weight: bold;
+}
+
+.driver-team {
+    color: var(--text-tertiary);
+    font-size: 14px;
+}
+
+.driver-car {
+    color: var(--text-tertiary);
+    font-size: 12px;
+}
+
+.driver-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 16px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.driver-stat {
+    text-align: center;
+}
+
+.driver-stat-label {
+    font-size: 12px;
+    color: var(--text-tertiary);
+    text-transform: uppercase;
+}
+
+.driver-stat-value {
+    font-size: 16px;
+    font-weight: bold;
+    color: var(--primary);
+}
+
+.driver-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.driver-actions button {
+    flex: 1;
+}
+
+/* ==================== LAPTIME DISPLAY ==================== */
+.laptime-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px;
+    background: rgba(51, 65, 85, 0.4);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    font-family: 'Courier New', monospace;
+    font-size: 14px;
+}
+
+.laptime-number {
+    color: var(--text-tertiary);
+    font-weight: 600;
+    width: 40px;
+}
+
+.laptime-time {
+    font-size: 16px;
+    font-weight: bold;
+    color: var(--primary);
+}
+
+.laptime-delta {
+    color: var(--text-tertiary);
+    font-size: 12px;
+}
+
+.laptime-delta.positive {
+    color: var(--danger);
+}
+
+.laptime-delta.negative {
+    color: var(--success);
+}
+
+/* ==================== CHARTS ==================== */
+.echarts-container {
+    width: 100%;
+    height: 100%;
+}
+
+/* ==================== ANIMATIONS ==================== */
+@keyframes slideInDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.5;
+    }
+}
+
+.animate-slideInDown {
+    animation: slideInDown 0.3s ease;
+}
+
+.animate-fadeIn {
+    animation: fadeIn 0.3s ease;
+}
+
+.animate-pulse {
+    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* ==================== GRADIENTS ==================== */
+.gradient-primary {
+    background: linear-gradient(135deg, var(--primary), var(--secondary));
+}
+
+.gradient-text {
+    background: linear-gradient(135deg, var(--primary), var(--secondary));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+/* ==================== RESPONSIVE ==================== */
+@media (max-width: 768px) {
+    .modal-content {
+        padding: 20px;
+    }
+
+    .nav-btn {
+        padding: 6px 12px;
+        font-size: 14px;
+    }
+
+    .card {
+        padding: 16px;
+    }
+
+    .leaderboard-item {
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .leaderboard-info {
+        width: 100%;
+    }
+
+    .leaderboard-time {
+        align-self: flex-end;
+    }
+
+    .driver-stats {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+/* ==================== SCROLLBAR CUSTOM ==================== */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: rgba(51, 65, 85, 0.3);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: rgba(6, 182, 212, 0.5);
+    border-radius: 4px;
+    transition: background 0.3s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(6, 182, 212, 0.8);
+}
+
+/* ==================== UTILITIES ==================== */
+.text-muted {
+    color: var(--text-tertiary);
+}
+
+.text-success {
+    color: var(--success);
+}
+
+.text-danger {
+    color: var(--danger);
+}
+
+.text-warning {
+    color: var(--accent);
+}
+
+.border-top {
+    border-top: 1px solid var(--border-color);
+}
+
+.divider {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--border-color), transparent);
+}
+
+/* ==================== LOADING STATE ==================== */
+.skeleton {
+    background: linear-gradient(90deg, rgba(51, 65, 85, 0.5), rgba(71, 85, 105, 0.5), rgba(51, 65, 85, 0.5));
+    background-size: 200% 100%;
+    animation: loading 1.5s infinite;
+    border-radius: 4px;
+}
+
+@keyframes loading {
+    0% {
+        background-position: 200% 0;
+    }
+    100% {
+        background-position: -200% 0;
+    }
+}
