@@ -6,6 +6,8 @@ class CrewDeckApp {
         this.currentSession = null;
         this.currentView = 'dashboard';
         this.charts = {};
+        this.toastTimeout = null;
+        this.confirmCallback = null;
 
         this.init();
     }
@@ -13,6 +15,7 @@ class CrewDeckApp {
     init() {
         this.loadFromStorage();
         this.setupEventListeners();
+        this.setupValidation();
         this.initVanta();
         this.renderDashboard();
         this.setupKeyboardShortcuts();
@@ -32,6 +35,92 @@ class CrewDeckApp {
         localStorage.setItem('crewdeck_sessions', JSON.stringify(this.sessions));
     }
 
+    // ==================== TOAST NOTIFICATIONS ====================
+    showToast(title, message, type = 'info') {
+        const container = document.getElementById('toast-container');
+        const toast = document.createElement('div');
+        toast.className = `toast ${type}`;
+
+        const icons = {
+            success: '✓',
+            error: '✕',
+            warning: '⚠',
+            info: 'ℹ'
+        };
+
+        toast.innerHTML = `
+            <span class="toast-icon">${icons[type] || icons.info}</span>
+            <div class="toast-content">
+                <div class="toast-title">${title}</div>
+                ${message ? `<div class="toast-message">${message}</div>` : ''}
+            </div>
+            <button class="toast-close">&times;</button>
+        `;
+
+        const closeBtn = toast.querySelector('.toast-close');
+        closeBtn.addEventListener('click', () => {
+            toast.style.animation = 'toastFadeOut 0.3s ease forwards';
+            setTimeout(() => toast.remove(), 300);
+        });
+
+        container.appendChild(toast);
+
+        // Auto-remove after 3 seconds
+        setTimeout(() => {
+            if (toast.parentElement) {
+                toast.style.animation = 'toastFadeOut 0.3s ease forwards';
+                setTimeout(() => toast.remove(), 300);
+            }
+        }, 3000);
+    }
+
+    // ==================== CONFIRMATION MODAL ====================
+    showConfirm(title, message, icon = '⚠️') {
+        return new Promise((resolve) => {
+            const existingModal = document.getElementById('confirm-modal-dynamic');
+            if (existingModal) existingModal.remove();
+
+            const modal = document.createElement('div');
+            modal.id = 'confirm-modal-dynamic';
+            modal.className = 'confirm-modal';
+            modal.innerHTML = `
+                <div class="confirm-modal-content">
+                    <span class="confirm-modal-icon">${icon}</span>
+                    <h3 class="confirm-modal-title">${title}</h3>
+                    <p class="confirm-modal-message">${message}</p>
+                    <div class="confirm-modal-actions">
+                        <button class="btn-secondary" id="confirm-cancel">Annuler</button>
+                        <button class="btn-danger" id="confirm-ok">Confirmer</button>
+                    </div>
+                </div>
+            `;
+
+            document.body.appendChild(modal);
+            const overlay = document.getElementById('modal-overlay');
+            overlay.classList.remove('hidden');
+
+            const cleanup = () => {
+                modal.remove();
+                overlay.classList.add('hidden');
+            };
+
+            document.getElementById('confirm-ok').addEventListener('click', () => {
+                cleanup();
+                resolve(true);
+            });
+
+            document.getElementById('confirm-cancel').addEventListener('click', () => {
+                cleanup();
+                resolve(false);
+            });
+
+            overlay.addEventListener('click', () => {
+                cleanup();
+                resolve(false);
+            });
+        });
+    }
+
     exportData() {
         const data = {
             drivers: this.drivers,
@@ -47,6 +136,8 @@ class CrewDeckApp {
         link.download = `crewdeck-export-${Date.now()}.json`;
         link.click();
         URL.revokeObjectURL(url);
+
+        this.showToast('Export réussi', `${this.drivers.length} pilotes et ${this.sessions.length} sessions exportés`, 'success');
     }
 
     // ==================== EVENT LISTENERS ====================
@@ -186,9 +277,11 @@ class CrewDeckApp {
         if (driverId) {
             const index = this.drivers.findIndex(d => d.id === driverId);
             this.drivers[index] = { ...this.drivers[index], ...driverData };
+            this.showToast('Pilote modifié', `${driverData.name} a été mis à jour avec succès`, 'success');
         } else {
             driverData.id = 'driver_' + Date.now();
             this.drivers.push(driverData);
+            this.showToast('Pilote ajouté', `${driverData.name} #${driverData.number} a été ajouté à l'équipe`, 'success');
         }
 
         this.saveToStorage();
@@ -197,12 +290,20 @@ class CrewDeckApp {
         this.renderDashboard();
     }
 
-    deleteDriver(driverId) {
-        if (confirm('Êtes-vous sûr de vouloir supprimer ce pilote ?')) {
+    async deleteDriver(driverId) {
+        const driver = this.drivers.find(d => d.id === driverId);
+        const confirmed = await this.showConfirm(
+            'Supprimer le pilote',
+            `Êtes-vous sûr de vouloir supprimer ${driver.name} ? Cette action est irréversible.`,
+            '🗑️'
+        );
+
+        if (confirmed) {
             this.drivers = this.drivers.filter(d => d.id !== driverId);
             this.saveToStorage();
             this.renderDrivers();
             this.renderDashboard();
+            this.showToast('Pilote supprimé', `${driver.name} a été retiré de l'équipe`, 'info');
         }
     }
 
@@ -223,9 +324,11 @@ class CrewDeckApp {
         if (sessionId) {
             const index = this.sessions.findIndex(s => s.id === sessionId);
             this.sessions[index] = { ...this.sessions[index], ...sessionData };
+            this.showToast('Session modifiée', `${sessionData.name} a été mise à jour`, 'success');
         } else {
             sessionData.id = 'session_' + Date.now();
             this.sessions.push(sessionData);
+            this.showToast('Session créée', `${sessionData.name} sur ${sessionData.track}`, 'success');
         }
 
         this.saveToStorage();
@@ -234,12 +337,20 @@ class CrewDeckApp {
         this.renderDashboard();
     }
 
-    deleteSession(sessionId) {
-        if (confirm('Êtes-vous sûr de vouloir supprimer cette session ?')) {
+    async deleteSession(sessionId) {
+        const session = this.sessions.find(s => s.id === sessionId);
+        const confirmed = await this.showConfirm(
+            'Supprimer la session',
+            `Êtes-vous sûr de vouloir supprimer "${session.name}" ? Tous les temps de tours associés seront perdus.`,
+            '🗑️'
+        );
+
+        if (confirmed) {
             this.sessions = this.sessions.filter(s => s.id !== sessionId);
             this.saveToStorage();
             this.renderSessions();
             this.renderDashboard();
+            this.showToast('Session supprimée', `${session.name} a été supprimée`, 'info');
         }
     }
 
@@ -280,13 +391,19 @@ class CrewDeckApp {
 
         document.getElementById('add-lap-btn').onclick = () => {
             const timeInput = document.getElementById('new-lap-time');
-            if (selectedDriverId && timeInput.value) {
-                this.addLapTime(sessionId, selectedDriverId, timeInput.value);
-                timeInput.value = '';
-                this.renderLaptimes(session, selectedDriverId);
-            } else {
-                alert('Veuillez sélectionner un pilote et entrer un temps');
+            if (!selectedDriverId) {
+                this.showToast('Pilote requis', 'Veuillez sélectionner un pilote avant d\'ajouter un temps', 'warning');
+                return;
             }
+            if (!timeInput.value) {
+                this.showToast('Temps requis', 'Veuillez entrer un temps de tour', 'warning');
+                return;
+            }
+            this.addLapTime(sessionId, selectedDriverId, timeInput.value);
+            timeInput.value = '';
+            timeInput.classList.remove('valid', 'error');
+            document.getElementById('lap-time-error').classList.remove('show');
+            this.renderLaptimes(session, selectedDriverId);
         };
 
         this.openModal('lap-times-modal');
@@ -298,7 +415,7 @@ class CrewDeckApp {
 
         const lapTime = this.parseTime(timeString);
         if (lapTime === null) {
-            alert('Format invalide. Utilisez MM:SS.mmm');
+            this.showToast('Format invalide', 'Utilisez le format MM:SS.mmm (ex: 1:23.456)', 'error');
             return;
         }
 
@@ -311,6 +428,7 @@ class CrewDeckApp {
 
         this.updateDriverStats(driver);
         this.saveToStorage();
+        this.showToast('Temps ajouté', `Tour enregistré: ${this.formatTime(lapTime)}`, 'success');
     }
 
     renderLaptimes(session, driverId) {
@@ -447,7 +565,16 @@ class CrewDeckApp {
         const leaderboard = document.getElementById('leaderboard');
 
         if (this.drivers.length === 0) {
-            leaderboard.innerHTML = '<div class="text-slate-400 text-sm">Aucun pilote pour le moment</div>';
+            leaderboard.innerHTML = `
+                <div class="empty-state">
+                    <div class="empty-state-icon">🏁</div>
+                    <div class="empty-state-title">Aucun pilote</div>
+                    <div class="empty-state-message">Ajoutez votre premier pilote pour commencer à suivre les performances</div>
+                    <button class="btn-primary btn-small empty-state-action" onclick="app.switchView('drivers'); app.openDriverModal();">
+                        + Ajouter un pilote
+                    </button>
+                </div>
+            `;
             return;
         }
 
@@ -457,7 +584,13 @@ class CrewDeckApp {
             .slice(0, 5);
 
         if (ranked.length === 0) {
-            leaderboard.innerHTML = '<div class="text-slate-400 text-sm">Aucun temps enregistré</div>';
+            leaderboard.innerHTML = `
+                <div class="empty-state">
+                    <div class="empty-state-icon">⏱️</div>
+                    <div class="empty-state-title">Aucun temps enregistré</div>
+                    <div class="empty-state-message">Créez une session et enregistrez des temps de tours</div>
+                </div>
+            `;
             return;
         }
 
@@ -484,7 +617,16 @@ class CrewDeckApp {
         const list = document.getElementById('sessions-list');
 
         if (this.sessions.length === 0) {
-            list.innerHTML = '<div class="text-slate-400 text-sm">Aucune session enregistrée</div>';
+            list.innerHTML = `
+                <div class="empty-state">
+                    <div class="empty-state-icon">📋</div>
+                    <div class="empty-state-title">Aucune session</div>
+                    <div class="empty-state-message">Créez votre première session de course</div>
+                    <button class="btn-primary btn-small empty-state-action" onclick="app.switchView('sessions'); app.openSessionModal();">
+                        + Nouvelle session
+                    </button>
+                </div>
+            `;
             return;
         }
 
@@ -519,7 +661,16 @@ class CrewDeckApp {
         const grid = document.getElementById('drivers-grid');
 
         if (this.drivers.length === 0) {
-            grid.innerHTML = '<div class="text-slate-400">Aucun pilote ajouté</div>';
+            grid.innerHTML = `
+                <div class="empty-state" style="grid-column: 1 / -1;">
+                    <div class="empty-state-icon">👤</div>
+                    <div class="empty-state-title">Aucun pilote dans l'équipe</div>
+                    <div class="empty-state-message">Commencez par ajouter les pilotes de votre équipe pour suivre leurs performances</div>
+                    <button class="btn-primary empty-state-action" onclick="app.openDriverModal();">
+                        + Ajouter votre premier pilote
+                    </button>
+                </div>
+            `;
             return;
         }
 
@@ -562,7 +713,16 @@ class CrewDeckApp {
         const grid = document.getElementById('sessions-grid');
 
         if (this.sessions.length === 0) {
-            grid.innerHTML = '<div class="text-slate-400">Aucune session créée</div>';
+            grid.innerHTML = `
+                <div class="empty-state">
+                    <div class="empty-state-icon">🏎️</div>
+                    <div class="empty-state-title">Aucune session de course</div>
+                    <div class="empty-state-message">Créez une session pour commencer à enregistrer les temps de tours de votre équipe</div>
+                    <button class="btn-primary empty-state-action" onclick="app.openSessionModal();">
+                        + Créer votre première session
+                    </button>
+                </div>
+            `;
             return;
         }
 
@@ -835,6 +995,18 @@ class CrewDeckApp {
     // ==================== KEYBOARD SHORTCUTS ====================
     setupKeyboardShortcuts() {
         document.addEventListener('keydown', (e) => {
+            // ESC to close modals
+            if (e.key === 'Escape') {
+                const openModals = document.querySelectorAll('.modal:not(.hidden)');
+                if (openModals.length > 0) {
+                    openModals.forEach(modal => this.closeModal(modal));
+                }
+                const confirmModal = document.getElementById('confirm-modal-dynamic');
+                if (confirmModal) confirmModal.remove();
+                document.getElementById('modal-overlay').classList.add('hidden');
+                return;
+            }
+
             // Ignore if user is typing in an input
             if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') {
                 return;
@@ -869,6 +1041,79 @@ class CrewDeckApp {
                 case '?':
                     this.openShortcutsModal();
                     break;
+            }
+        });
+    }
+
+    // ==================== REAL-TIME VALIDATION ====================
+    setupValidation() {
+        // Driver number validation
+        const driverNumber = document.getElementById('driver-number');
+        const driverNumberError = document.getElementById('driver-number-error');
+
+        driverNumber.addEventListener('input', (e) => {
+            const value = parseInt(e.target.value);
+            const form = document.getElementById('driver-form');
+            const currentDriverId = form.dataset.driverId;
+
+            // Check if number is already taken
+            const isNumberTaken = this.drivers.some(d =>
+                d.number === value && d.id !== currentDriverId
+            );
+
+            if (isNumberTaken) {
+                e.target.classList.add('error');
+                e.target.classList.remove('valid');
+                driverNumberError.classList.add('show');
+            } else if (value >= 1 && value <= 99) {
+                e.target.classList.remove('error');
+                e.target.classList.add('valid');
+                driverNumberError.classList.remove('show');
+            } else {
+                e.target.classList.remove('valid');
+                driverNumberError.classList.remove('show');
+            }
+        });
+
+        // Driver name validation
+        const driverName = document.getElementById('driver-name');
+        driverName.addEventListener('input', (e) => {
+            if (e.target.value.trim().length > 0) {
+                e.target.classList.add('valid');
+                e.target.classList.remove('error');
+            } else {
+                e.target.classList.remove('valid');
+            }
+        });
+
+        // Lap time validation
+        const lapTimeInput = document.getElementById('new-lap-time');
+        const lapTimeError = document.getElementById('lap-time-error');
+
+        lapTimeInput.addEventListener('input', (e) => {
+            const value = e.target.value;
+            if (!value) {
+                e.target.classList.remove('error', 'valid');
+                lapTimeError.classList.remove('show');
+                return;
+            }
+
+            const isValid = /^\d{1,2}:\d{2}\.\d{1,3}$/.test(value);
+            if (isValid) {
+                e.target.classList.add('valid');
+                e.target.classList.remove('error');
+                lapTimeError.classList.remove('show');
+            } else {
+                e.target.classList.add('error');
+                e.target.classList.remove('valid');
+                lapTimeError.classList.add('show');
+            }
+        });
+
+        // Enter key to submit lap time
+        lapTimeInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                document.getElementById('add-lap-btn').click();
             }
         });
     }
